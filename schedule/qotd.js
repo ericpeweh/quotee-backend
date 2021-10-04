@@ -29,7 +29,7 @@ const sendQOTD = async () => {
 		const payload = JSON.stringify({
 			body: `${quotes.quotes} - ${quotes.author}`,
 			title: "Quotes of the day",
-			url: `http://localhost:3000/${quotes.author}/p/${quotes._id}`
+			url: `https://quoteeid.netlify.app/${quotes.author}/p/${quotes._id}`
 		});
 
 		notifications.map((user, index) => {
@@ -41,7 +41,7 @@ const sendQOTD = async () => {
 						name: "Quotes of the day",
 						description: `${quotes.quotes} - ${quotes.author}`,
 						profilePicture: quotes.authorId.profilePicture,
-						url: `http://localhost:3000/${quotes.author}/p/${quotes._id}`
+						url: `https://quoteeid.netlify.app/${quotes.author}/p/${quotes._id}`
 					};
 
 					await User.findByIdAndUpdate(notifications[index].userId, {

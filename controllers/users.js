@@ -54,9 +54,9 @@ export const signIn = async (req, res) => {
 
 		res.cookie("jwt", token, {
 			httpOnly: true,
-			maxAge: 7 * 24 * 60 * 60 * 1000 // 7 Days
-			// ,sameSite: "Lax",
-			// secure: true
+			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
+			sameSite: "Lax",
+			secure: true
 		});
 
 		res.status(200).json({ message: "Signed in successfully." });
@@ -162,7 +162,7 @@ export const signUp = async (req, res) => {
 		const emailTemplate = handlebars.compile(emailTemplateSrc);
 		const htmlToSend = emailTemplate({
 			fullName: `${firstName} ${lastName}`,
-			verificationURL: `http://localhost:3000/verifyEmail/${token}`
+			verificationURL: `https://quoteeid.netlify.app/verifyEmail/${token}`
 		});
 
 		const mailOptions = {
@@ -185,7 +185,7 @@ export const signUp = async (req, res) => {
 				"Your account has been activated, now you can start sharing quotes. You could also update your profile.",
 			profilePicture:
 				"https://res.cloudinary.com/quoteequotesid/image/upload/v1633262782/system/quoteelogo.png",
-			url: `http://localhost:3000/settings/account`
+			url: `https://quoteeid.netlify.app/settings/account`
 		};
 
 		await User.findByIdAndUpdate(newUser._id, {
@@ -297,7 +297,7 @@ export const verifyEmail = async (req, res) => {
 			const emailTemplate = handlebars.compile(emailTemplateSrc);
 			const htmlToSend = emailTemplate({
 				fullName: `${registeredUser.fullName}`,
-				verificationURL: `http://localhost:3000/verifyEmail/${token}`
+				verificationURL: `https://quoteeid.netlify.app/verifyEmail/${token}`
 			});
 
 			const mailOptions = {
@@ -412,7 +412,7 @@ export const resetPassword = async (req, res) => {
 		const emailTemplate = handlebars.compile(emailTemplateSrc);
 		const htmlToSend = emailTemplate({
 			fullName: registeredUser.fullName,
-			resetPasswordURL: `http://localhost:3000/verifyResetPassword/${token}`
+			resetPasswordURL: `https://quoteeid.netlify.app/verifyResetPassword/${token}`
 		});
 
 		const mailOptions = {
