@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 5000;
 // Body parser & cors-policy & cookie parser
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(express.json({ limit: "30mb", extended: "true" }));
-app.use(cors({ credentials: true, origin: ["https://quoteeid.netlify.app"] }));
+app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser());
 app.use(helmet());
 app.use(
