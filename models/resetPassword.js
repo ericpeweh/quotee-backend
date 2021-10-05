@@ -1,5 +1,7 @@
 // Depencencies
 import mongoose from "mongoose";
+import moment from "moment";
+
 const Schema = mongoose.Schema;
 
 const resetPasswordSchema = new Schema({
@@ -14,7 +16,7 @@ const resetPasswordSchema = new Schema({
 	},
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: moment.utc(),
 		expires: 3600
 	}
 });

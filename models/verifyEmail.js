@@ -1,5 +1,7 @@
 // Depencencies
 import mongoose from "mongoose";
+import moment from "moment";
+
 const Schema = mongoose.Schema;
 
 const verifyEmailSchema = new Schema({
@@ -13,7 +15,7 @@ const verifyEmailSchema = new Schema({
 	},
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: moment.utc(),
 		expires: 3600 * 24
 	}
 });

@@ -114,7 +114,8 @@ export const signUp = async (req, res) => {
 		}
 
 		// Check password format
-		const validatePassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+		const validatePassword =
+			/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&;^()])[A-Za-z\d@$!%*#?&;^()]{8,}$/;
 		const passwordIsValid = validatePassword.test(password);
 		if (!passwordIsValid) {
 			return res.status(400).json({
@@ -320,8 +321,6 @@ export const verifyEmail = async (req, res) => {
 				.status(401)
 				.json({ message: "Your token has expired, a new token is sent to your email." });
 		}
-
-		return res.status(400).json({ message: "Invalid token!" });
 	} catch (error) {
 		return res.status(400).json({ message: error.message });
 	}
