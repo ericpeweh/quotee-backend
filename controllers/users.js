@@ -344,7 +344,8 @@ export const changePassword = async (req, res) => {
 		}
 
 		// Check password format
-		const validatePassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+		const validatePassword =
+			/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&;^()])[A-Za-z\d@$!%*#?&;^()]{8,}$/;
 		const passwordIsValid = validatePassword.test(newPassword);
 		if (!passwordIsValid) {
 			throw {
@@ -457,7 +458,8 @@ export const verifyResetPassword = async (req, res) => {
 		}
 
 		// Check password format
-		const validatePassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+		const validatePassword =
+			/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&;^()])[A-Za-z\d@$!%*#?&;^()]{8,}$/;
 		const passwordIsValid = validatePassword.test(password);
 		if (!passwordIsValid) {
 			return res.status(400).json({

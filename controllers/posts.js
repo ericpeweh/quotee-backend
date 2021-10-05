@@ -217,7 +217,7 @@ export const createPost = async (req, res) => {
 	const userId = xss(req.userId);
 	const username = xss(req.username);
 	const cleanedQuotes = xss(sanitizeHTML(req.body.quotes));
-	const cleanedTags = req.body.tags.map(tag => sanitizeHTML(tag));
+	const cleanedTags = req.body.tags.map(tag => sanitizeHTML(tag.replace(/#/g, "")));
 
 	const newPost = new Quotes({
 		quotes: cleanedQuotes,
