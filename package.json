@@ -30,6 +30,7 @@
 		"nodemailer": "^6.6.3",
 		"sanitize-html": "^2.4.0",
 		"sharp": "^0.29.1",
-		"web-push": "^3.4.5"
+		"web-push": "^3.4.5",
+		"xss": "^1.0.9"
 	}
 }

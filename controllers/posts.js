@@ -1,6 +1,7 @@
 // Dependencies
 import mongoose from "mongoose";
 import moment from "moment";
+import xss from "xss";
 import { sanitizeHTML } from "../utils/sanitizeHTML.js";
 
 // Models
@@ -169,20 +170,27 @@ export const getPostsBySearch = async (req, res) => {
 	try {
 		let { quotes = "", author = "", tags, fromDate = "", toDate = "" } = req.query;
 
-		// Build query up
-		const quotesRegex = new RegExp(quotes || "(.*?)", "i");
-		const authorRegex = new RegExp(author || "(.*?)", "i");
-		const tagsQuery = tags && tags !== "null" ? { tags: { $in: tags?.split(",") } } : {};
+		let cleanQuotes = xss(quotes);
+		let cleanAuthor = xss(author);
+		let cleanTags = xss(tags);
+		let cleanFromDate = xss(fromDate);
+		let cleanToDate = xss(toDate);
 
-		if (fromDate === "null" || !fromDate) {
+		// Build query up
+		const quotesRegex = new RegExp(cleanQuotes || "(.*?)", "i");
+		const authorRegex = new RegExp(cleanAuthor || "(.*?)", "i");
+		const tagsQuery =
+			cleanTags && cleanTags !== "null" ? { tags: { $in: cleanTags?.split(",") } } : {};
+
+		if (cleanFromDate === "null" || !cleanFromDate) {
 			fromDate = "01/01/2021";
 		}
-		if (toDate === "null" || !toDate) toDate = moment.utc().format("DD/MM/YYYY");
+		if (cleanToDate === "null" || !cleanToDate) cleanToDate = moment.utc().format("DD/MM/YYYY");
 
 		const dateQuery = {
 			createdAt: {
-				$lte: moment.utc(`${toDate} 24:00:00`, "DD/MM/YYYY hh:mm:ss").format(),
-				$gte: moment.utc(`${fromDate} 00:00:00`, "DD/MM/YYYY hh:mm:ss").format()
+				$lte: moment.utc(`${cleanToDate} 24:00:00`, "DD/MM/YYYY hh:mm:ss").format(),
+				$gte: moment.utc(`${cleanFromDate} 00:00:00`, "DD/MM/YYYY hh:mm:ss").format()
 			}
 		};
 
@@ -213,9 +221,9 @@ export const getPostsBySearch = async (req, res) => {
 
 // POST /p
 export const createPost = async (req, res) => {
-	const userId = req.userId;
-	const username = req.username;
-	const cleanedQuotes = sanitizeHTML(req.body.quotes);
+	const userId = xss(req.userId);
+	const username = xss(req.username);
+	const cleanedQuotes = xss(sanitizeHTML(req.body.quotes));
 	const cleanedTags = req.body.tags.map(tag => sanitizeHTML(tag));
 
 	const newPost = new Quotes({

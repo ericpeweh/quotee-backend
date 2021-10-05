@@ -13,6 +13,6 @@ const router = express.Router();
 // Access controllers
 router.get("/", isAuth, getArticles);
 router.get("/:articleId", getArticle);
-router.post("/", createArticle);
+// router.post("/", createArticle);
 
 export default router;
