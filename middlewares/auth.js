@@ -1,6 +1,9 @@
 // Dependencies
 import jwt from "jsonwebtoken";
 
+// Models
+import User from "../models/user";
+
 export const isAuth = (req, res, next) => {
 	const token = req.cookies?.jwt;
 
@@ -12,6 +15,10 @@ export const isAuth = (req, res, next) => {
 
 			return decoded;
 		});
+
+		const user = await User.findById(authenticated.userId);
+		if (!user) throw { message: "User not found to authenticate!" };
+		if (user.isEmailVerified === false) throw { message: "User is not verified!" };
 
 		if (authenticated) {
 			req.userId = authenticated.userId;

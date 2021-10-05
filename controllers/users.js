@@ -43,6 +43,10 @@ export const signIn = async (req, res) => {
 				.status(403)
 				.json({ message: `${isEmail ? "Email" : "Username"} or password is incorrect.` });
 
+		if (isAuth && registeredUser && registeredUser.isEmailVerified === false) {
+			return res.status(401).json({ message: "Please verify your email address." });
+		}
+
 		const token = jwt.sign(
 			{
 				userId: registeredUser._id,
