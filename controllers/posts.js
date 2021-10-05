@@ -170,27 +170,20 @@ export const getPostsBySearch = async (req, res) => {
 	try {
 		let { quotes = "", author = "", tags, fromDate = "", toDate = "" } = req.query;
 
-		let cleanQuotes = xss(quotes);
-		let cleanAuthor = xss(author);
-		let cleanTags = xss(tags);
-		let cleanFromDate = xss(fromDate);
-		let cleanToDate = xss(toDate);
-
 		// Build query up
-		const quotesRegex = new RegExp(cleanQuotes || "(.*?)", "i");
-		const authorRegex = new RegExp(cleanAuthor || "(.*?)", "i");
-		const tagsQuery =
-			cleanTags && cleanTags !== "null" ? { tags: { $in: cleanTags?.split(",") } } : {};
+		const quotesRegex = new RegExp(quotes || "(.*?)", "i");
+		const authorRegex = new RegExp(author || "(.*?)", "i");
+		const tagsQuery = tags && tags !== "null" ? { tags: { $in: tags?.split(",") } } : {};
 
-		if (cleanFromDate === "null" || !cleanFromDate) {
+		if (fromDate === "null" || !fromDate) {
 			fromDate = "01/01/2021";
 		}
-		if (cleanToDate === "null" || !cleanToDate) cleanToDate = moment.utc().format("DD/MM/YYYY");
+		if (toDate === "null" || !toDate) toDate = moment.utc().format("DD/MM/YYYY");
 
 		const dateQuery = {
 			createdAt: {
-				$lte: moment.utc(`${cleanToDate} 24:00:00`, "DD/MM/YYYY hh:mm:ss").format(),
-				$gte: moment.utc(`${cleanFromDate} 00:00:00`, "DD/MM/YYYY hh:mm:ss").format()
+				$lte: moment.utc(`${toDate} 24:00:00`, "DD/MM/YYYY hh:mm:ss").format(),
+				$gte: moment.utc(`${fromDate} 00:00:00`, "DD/MM/YYYY hh:mm:ss").format()
 			}
 		};
 
