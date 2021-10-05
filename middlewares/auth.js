@@ -2,9 +2,9 @@
 import jwt from "jsonwebtoken";
 
 // Models
-import User from "../models/user";
+import User from "../models/user.js";
 
-export const isAuth = (req, res, next) => {
+export const isAuth = async (req, res, next) => {
 	const token = req.cookies?.jwt;
 
 	try {
