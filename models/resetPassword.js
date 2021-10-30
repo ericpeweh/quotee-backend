@@ -1,6 +1,6 @@
 // Depencencies
-import mongoose from "mongoose";
-import moment from "moment";
+const mongoose = require("mongoose");
+const moment = require("moment");
 
 const Schema = mongoose.Schema;
 
@@ -23,4 +23,4 @@ const resetPasswordSchema = new Schema({
 
 const ResetPassword = mongoose.model("ResetPassword", resetPasswordSchema);
 
-export default ResetPassword;
+module.exports = ResetPassword;

@@ -1,6 +1,6 @@
 // Dependencies
-import mongoose from "mongoose";
-import moment from "moment";
+const mongoose = require("mongoose");
+const moment = require("moment");
 
 const Schema = mongoose.Schema;
 
@@ -16,4 +16,4 @@ const articleSchema = Schema({
 
 const Article = mongoose.model("Article", articleSchema);
 
-export default Article;
+module.exports = Article;

@@ -1,27 +1,26 @@
 // Dependencies
-import express from "express";
+const express = require("express");
 
 // Controllers
-import {
-	getPosts,
-	getPost,
-	editPost,
-	getEditPost,
-	getPostsBySearch,
-	createPost,
-	getLikes,
-	getTopQuotes,
-	likePost,
-	favoritePost,
-	archivePost,
-	unarchivePost,
-	deletePost,
-	reportPost
-} from "../controllers/posts.js";
+const getPosts = require("../controllers/posts.js").getPosts;
+const getPost = require("../controllers/posts.js").getPost;
+const editPost = require("../controllers/posts.js").editPost;
+const getEditPost = require("../controllers/posts.js").getEditPost;
+const getPostsBySearch = require("../controllers/posts.js").getPostsBySearch;
+const createPost = require("../controllers/posts.js").createPost;
+const getLikes = require("../controllers/posts.js").getLikes;
+const getTopQuotes = require("../controllers/posts.js").getTopQuotes;
+const likePost = require("../controllers/posts.js").likePost;
+const favoritePost = require("../controllers/posts.js").favoritePost;
+const archivePost = require("../controllers/posts.js").archivePost;
+const unarchivePost = require("../controllers/posts.js").unarchivePost;
+const deletePost = require("../controllers/posts.js").deletePost;
+const reportPost = require("../controllers/posts.js").reportPost;
 
 // Middlewares
-import { isAuth } from "../middlewares/auth.js";
-import { quotesValidator, tagsValidator } from "../middlewares/posts.js";
+const isAuth = require("../middlewares/auth.js").isAuth;
+const quotesValidator = require("../middlewares/posts.js").quotesValidator;
+const tagsValidator = require("../middlewares/posts.js").tagsValidator;
 
 // Express router
 const router = express.Router();
@@ -42,4 +41,4 @@ router.patch("/:postId/archivePost", isAuth, archivePost);
 router.patch("/:postId/unarchivePost", isAuth, unarchivePost);
 router.patch("/:postId/report", isAuth, reportPost);
 
-export default router;
+module.exports = router;

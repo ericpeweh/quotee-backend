@@ -1,8 +1,8 @@
 // Models
-import Notification from "../models/notification.js";
-import User from "../models/user.js";
+const Notification = require("../models/notification.js");
+const User = require("../models/user.js");
 
-export const subscribeNotifications = async (req, res) => {
+module.exports.subscribeNotifications = async (req, res) => {
 	const { userId } = req;
 	const subscription = req.body;
 
@@ -21,7 +21,7 @@ export const subscribeNotifications = async (req, res) => {
 	}
 };
 
-export const unsubscribeNotifications = async (req, res) => {
+module.exports.unsubscribeNotifications = async (req, res) => {
 	const userId = req.userId;
 
 	try {

@@ -5,7 +5,7 @@ const moment = require("moment");
 const Schema = mongoose.Schema;
 
 // Model schema
-const reportSchema = Schema({
+const reportUserSchema = Schema({
 	createdAt: {
 		type: Date,
 		default: moment.utc().format()
@@ -14,19 +14,16 @@ const reportSchema = Schema({
 		type: Schema.Types.ObjectId,
 		ref: "User"
 	},
-	postId: {
+	userId: {
 		type: Schema.Types.ObjectId,
 		ref: "Quotes"
 	},
-	postAuthor: {
-		type: Schema.Types.ObjectId,
-		ref: "User"
-	},
 	reasonCode: String,
-	reasonText: String
+	reasonText: String,
+	description: String
 });
 
 // Report schema / collections
-const Report = mongoose.model("Report", reportSchema);
+const ReportUser = mongoose.model("ReportUser", reportUserSchema);
 
-module.exports = Report;
+module.exports = ReportUser;

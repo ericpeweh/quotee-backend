@@ -1,6 +1,6 @@
 // Dependencies
-import cloudinary from "cloudinary";
-import dotenv from "dotenv";
+const cloudinary = require("cloudinary");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
@@ -11,4 +11,4 @@ cloudinary.v2.config({
 	secure: true
 });
 
-export default cloudinary.v2;
+module.exports = cloudinary.v2;

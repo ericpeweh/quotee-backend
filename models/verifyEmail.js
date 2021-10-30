@@ -1,6 +1,6 @@
 // Depencencies
-import mongoose from "mongoose";
-import moment from "moment";
+const mongoose = require("mongoose");
+const moment = require("moment");
 
 const Schema = mongoose.Schema;
 
@@ -22,4 +22,4 @@ const verifyEmailSchema = new Schema({
 
 const VerifyEmail = mongoose.model("VerifyEmail", verifyEmailSchema);
 
-export default VerifyEmail;
+module.exports = VerifyEmail;

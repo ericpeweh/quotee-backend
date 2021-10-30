@@ -1,22 +1,22 @@
 // Dependencies
-import mongoose from "mongoose";
-import moment from "moment";
-import xss from "xss";
-import { sanitizeHTML } from "../utils/sanitizeHTML.js";
+const mongoose = require("mongoose");
+const moment = require("moment");
+const xss = require("xss");
+const sanitizeHTML = require("../utils/sanitizeHTML.js").sanitizeHTML;
 
 // Models
-import Quotes from "../models/quotes.js";
-import User from "../models/user.js";
-import Report from "../models/report.js";
+const Quotes = require("../models/quotes.js");
+const User = require("../models/user.js");
+const Report = require("../models/report.js");
 
 // GET /p/
-export const getPosts = async (req, res) => {
+module.exports.getPosts = async (req, res) => {
 	const { quotes } = req.query;
 	const LIMIT = 10;
 
 	try {
 		const total = await Quotes.countDocuments({});
-		const hasMore = total > quotes + LIMIT;
+		const hasMore = total > Number(quotes);
 
 		const posts = await Quotes.find()
 			.sort({ _id: -1 })
@@ -41,7 +41,7 @@ export const getPosts = async (req, res) => {
 };
 
 // GET /p/:postId
-export const getPost = async (req, res) => {
+module.exports.getPost = async (req, res) => {
 	try {
 		const { postId } = req.params;
 		const post = await Quotes.findById(postId).populate("authorId", "profilePicture");
@@ -63,7 +63,7 @@ export const getPost = async (req, res) => {
 };
 
 // PATCH /p/:postId/edit
-export const editPost = async (req, res) => {
+module.exports.editPost = async (req, res) => {
 	const username = req.username;
 	const { postId } = req.params;
 	const { quotes: editedQuotes, tags: editedTags } = req.body;
@@ -82,13 +82,23 @@ export const editPost = async (req, res) => {
 	if (isPostedMoreThan1hAgo)
 		return res.status(400).json({ message: "Post was created more than 1 hour ago." });
 
-	await Quotes.findByIdAndUpdate(postId, { quotes: editedQuotes, tags: editedTags });
+	const updatedPost = await Quotes.findByIdAndUpdate(
+		postId,
+		{
+			quotes: editedQuotes.replace(/\s+/g, " ").trim(),
+			tags: editedTags
+		},
+		{ new: true }
+	).populate("authorId", "profilePicture");
 
-	return res.status(200).json({ message: "Post successfully updated." });
+	return res.status(200).json({
+		message: "Post successfully updated.",
+		editedPost: { ...updatedPost.toObject(), profilePicture: updatedPost.authorId.profilePicture }
+	});
 };
 
 // GET /p/:postId/edit
-export const getEditPost = async (req, res) => {
+module.exports.getEditPost = async (req, res) => {
 	const username = req.username;
 	const { postId } = req.params;
 
@@ -111,7 +121,7 @@ export const getEditPost = async (req, res) => {
 };
 
 // GET /p/top
-export const getTopQuotes = async (req, res) => {
+module.exports.getTopQuotes = async (req, res) => {
 	try {
 		const posts = await Quotes.find({}).sort({ likes: -1 }).limit(4);
 
@@ -128,7 +138,7 @@ export const getTopQuotes = async (req, res) => {
 };
 
 // GET /p/:postId/likes
-export const getLikes = async (req, res) => {
+module.exports.getLikes = async (req, res) => {
 	try {
 		const { postId } = req.params;
 		const { username = "", current = 0 } = req.query;
@@ -166,13 +176,15 @@ export const getLikes = async (req, res) => {
 };
 
 // GET /p/search?quotes=quotes&author=author&tags=tags&fromDate=fromDate&toDate=toDate
-export const getPostsBySearch = async (req, res) => {
+module.exports.getPostsBySearch = async (req, res) => {
 	try {
-		let { quotes = "", author = "", tags, fromDate = "", toDate = "" } = req.query;
+		let { quotes = "", author = "", tags, fromDate = "", toDate = "", current = 0 } = req.query;
+
+		const LIMIT = 10;
 
 		// Build query up
-		const quotesRegex = new RegExp(quotes || "(.*?)", "i");
-		const authorRegex = new RegExp(author || "(.*?)", "i");
+		const quotesRegex = new RegExp(quotes || "(.*?)", "gi");
+		const authorRegex = new RegExp(author || "(.*?)", "gi");
 		const tagsQuery = tags && tags !== "null" ? { tags: { $in: tags?.split(",") } } : {};
 
 		if (fromDate === "null" || !fromDate) {
@@ -187,6 +199,15 @@ export const getPostsBySearch = async (req, res) => {
 			}
 		};
 
+		const postsTotal = await Quotes.find({
+			quotes: quotesRegex,
+			author: authorRegex,
+			...tagsQuery,
+			...dateQuery
+		});
+		const total = postsTotal.length;
+		const hasMore = total < LIMIT ? false : total > Number(current);
+
 		const posts = await Quotes.find({
 			quotes: quotesRegex,
 			author: authorRegex,
@@ -194,6 +215,8 @@ export const getPostsBySearch = async (req, res) => {
 			...dateQuery
 		})
 			.sort({ _id: -1 })
+			.skip(Number(current))
+			.limit(LIMIT)
 			.populate("authorId", "profilePicture");
 
 		const structuredPosts = posts.map(post => ({
@@ -206,35 +229,42 @@ export const getPostsBySearch = async (req, res) => {
 			profilePicture: post.authorId.profilePicture
 		}));
 
-		res.status(200).json(structuredPosts);
+		res.status(200).json({ posts: structuredPosts, hasMore });
 	} catch (error) {
 		res.status(404).json({ message: error.message });
 	}
 };
 
 // POST /p
-export const createPost = async (req, res) => {
+module.exports.createPost = async (req, res) => {
 	const userId = xss(req.userId);
 	const username = xss(req.username);
-	const cleanedQuotes = xss(sanitizeHTML(req.body.quotes));
-	const cleanedTags = req.body.tags.map(tag => sanitizeHTML(tag.replace(/#/g, "")));
+	const cleanedQuotes = xss(sanitizeHTML(req.body.quotes.replace(/\s+/g, " ").trim()));
+	const cleanedTags = req.body.tags.map(tag => sanitizeHTML(tag.replace(/[^a-zA-Z0-9 ]/g, "")));
 
 	const newPost = new Quotes({
 		quotes: cleanedQuotes,
 		tags: cleanedTags,
 		authorId: userId,
 		author: username,
-		createdAt: moment.utc().format()
+		createdAt: moment.utc().format(),
+		qotd: false
 	});
 
 	try {
 		const post = await newPost.save();
 		// Add new post id to user posts
-		await User.findByIdAndUpdate(userId, { $push: { posts: post._id } }, { upsert: true });
+		const updatedUser = await User.findByIdAndUpdate(
+			userId,
+			{ $push: { posts: post._id } },
+			{ upsert: true }
+		);
+
 		res.status(201).json({
 			postId: newPost._id,
 			message: "Successfully created a new quotes.",
-			author: newPost.author
+			author: newPost.author,
+			newPost: { ...post.toObject(), profilePicture: updatedUser.profilePicture }
 		});
 	} catch (error) {
 		res.status(409).json({ message: error.message });
@@ -242,7 +272,7 @@ export const createPost = async (req, res) => {
 };
 
 // PATCH /p/:postId/likePost
-export const likePost = async (req, res) => {
+module.exports.likePost = async (req, res) => {
 	const { postId: id } = req.params;
 
 	if (!req.username || !req.userId) return res.json({ message: "Unauthenticated" });
@@ -269,11 +299,26 @@ export const likePost = async (req, res) => {
 		{ new: true } // show the new version of post
 	);
 
-	res.status(200).json(updatedPost);
+	const populatedUpdatedPost = await Quotes.findById(id)
+		.sort({ _id: -1 })
+		.skip(0)
+		.limit(10)
+		.populate({
+			path: "likes",
+			select: "username posts profilePicture"
+		});
+
+	const updatedLikes = populatedUpdatedPost.likes.map(user => ({
+		username: user.username,
+		posts: user.posts.length,
+		profilePicture: user.profilePicture
+	}));
+
+	res.status(200).json({ updatedPost, updatedLikes });
 };
 
 // PATCH /p/:postId/favoritePost
-export const favoritePost = async (req, res) => {
+module.exports.favoritePost = async (req, res) => {
 	const { postId } = req.params;
 
 	if (!req.username || !req.userId) return res.json({ message: "Unauthenticated" });
@@ -326,7 +371,7 @@ export const favoritePost = async (req, res) => {
 };
 
 // PATCH /p/:postId/archivePost
-export const archivePost = async (req, res) => {
+module.exports.archivePost = async (req, res) => {
 	const username = req.username;
 	const { postId } = req.params;
 
@@ -349,14 +394,35 @@ export const archivePost = async (req, res) => {
 		tags: post.tags,
 		likes: post.likes,
 		createdAt: post.createdAt,
-		archivedAt: new Date()
+		archivedAt: new Date(),
+		qotd: post.qotd
 	});
 
 	const updatedUser = await User.findOneAndUpdate(
 		{ username },
 		{ archivedPosts: user.archivedPosts },
 		{ new: true }
-	);
+	).populate({
+		path: "archivedPosts",
+		populate: {
+			path: "authorId",
+			select: "profilePicture"
+		},
+		options: { sort: { _id: -1 } }
+	});
+
+	const structuredPosts = updatedUser.archivedPosts
+		.map(post => ({
+			_id: post.quotesId,
+			quotes: post.quotes,
+			author: post.author,
+			tags: post.tags,
+			likes: post.likes,
+			createdAt: post.createdAt,
+			archivedAt: post.archivedAt,
+			profilePicture: post.authorId.profilePicture
+		}))
+		.reverse();
 
 	// Remove post from "posts" of user
 	await User.findOneAndUpdate({ username }, { $pull: { posts: post._id } });
@@ -364,10 +430,10 @@ export const archivePost = async (req, res) => {
 	// Delete post from quotes collections
 	await Quotes.findByIdAndDelete(postId);
 
-	return res.status(200).json({ archivedPosts: updatedUser.archivedPosts, archivedPostId: postId });
+	return res.status(200).json({ archivedPosts: structuredPosts, archivedPostId: postId });
 };
 
-export const unarchivePost = async (req, res) => {
+module.exports.unarchivePost = async (req, res) => {
 	const username = req.username;
 	const { postId } = req.params;
 
@@ -387,7 +453,8 @@ export const unarchivePost = async (req, res) => {
 		tags: archivedPost.tags,
 		authorId: archivedPost.authorId,
 		author: archivedPost.author,
-		createdAt: archivedPost.createdAt
+		createdAt: archivedPost.createdAt,
+		qotd: archivedPost.qotd
 	});
 
 	// Unarchive post / re-post to Quotes collections
@@ -422,7 +489,7 @@ export const unarchivePost = async (req, res) => {
 };
 
 // DELETE /p/:postId
-export const deletePost = async (req, res) => {
+module.exports.deletePost = async (req, res) => {
 	const username = req.username;
 	const { postId } = req.params;
 
@@ -452,7 +519,7 @@ export const deletePost = async (req, res) => {
 	return res.status(200).json({ message: "Post successfully deleted.", postId });
 };
 
-export const reportPost = async (req, res) => {
+module.exports.reportPost = async (req, res) => {
 	const { userId, username } = req;
 	const { postId } = req.params;
 	const { code } = req.query;

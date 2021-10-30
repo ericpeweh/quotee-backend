@@ -1,6 +1,6 @@
 // Dependencies
-import mongoose from "mongoose";
-import moment from "moment";
+const mongoose = require("mongoose");
+const moment = require("moment");
 
 const Schema = mongoose.Schema;
 
@@ -18,10 +18,15 @@ const quotesSchema = Schema({
 		ref: "User",
 		default: []
 	},
-	createdAt: { type: Date, default: moment.utc().format() }
+	createdAt: { type: Date, default: moment.utc().format() },
+	qotd: {
+		type: Boolean,
+		required: true,
+		default: false
+	}
 });
 
 // Quotes schema / collections
 const Quotes = mongoose.model("Quotes", quotesSchema);
 
-export default Quotes;
+module.exports = Quotes;

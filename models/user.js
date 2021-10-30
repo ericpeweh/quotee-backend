@@ -1,6 +1,6 @@
 // Dependencies
-import mongoose from "mongoose";
-import moment from "moment";
+const mongoose = require("mongoose");
+const moment = require("moment");
 
 const Schema = mongoose.Schema;
 
@@ -28,6 +28,10 @@ const notificationsSchema = new Schema({
 	url: {
 		type: String,
 		required: true
+	},
+	read: {
+		type: Boolean,
+		default: false
 	}
 });
 
@@ -55,7 +59,11 @@ const archivedPostsSchema = new Schema({
 		ref: "User",
 		default: []
 	},
-	createdAt: { type: Date, default: moment.utc().format() }
+	createdAt: { type: Date, default: moment.utc().format() },
+	qotd: {
+		type: Boolean,
+		required: true
+	}
 });
 
 const userSchema = new Schema({
@@ -138,4 +146,4 @@ const userSchema = new Schema({
 
 const User = mongoose.model("User", userSchema);
 
-export default User;
+module.exports = User;

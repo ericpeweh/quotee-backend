@@ -1,4 +1,4 @@
-export const avatarsURL = [
+module.exports.avatarsURL = [
 	"https://res.cloudinary.com/quoteequotesid/image/upload/v1630920047/avatar/burger_wulqe4.webp",
 	"https://res.cloudinary.com/quoteequotesid/image/upload/v1630920047/avatar/polar_oyhdx2.webp",
 	"https://res.cloudinary.com/quoteequotesid/image/upload/v1630920047/avatar/astronaut_hcvecf.webp",

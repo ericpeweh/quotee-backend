@@ -1,5 +1,5 @@
 // Dependencies
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
@@ -24,4 +24,4 @@ const notificationSchema = Schema({
 // Notification schema / collections
 const Notification = mongoose.model("Notification", notificationSchema);
 
-export default Notification;
+module.exports = Notification;

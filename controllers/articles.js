@@ -1,14 +1,14 @@
 // Dependencies
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 // Models
-import Article from "../models/article.js";
+const Article = require("../models/article.js");
 
 // Utils
-import { sanitizeHTML } from "../utils/sanitizeHTML.js";
+const sanitizeHTML = require("../utils/sanitizeHTML.js").sanitizeHTML;
 
 // GET /a
-export const getArticles = async (req, res) => {
+module.exports.getArticles = async (req, res) => {
 	const articles = await Article.find({}).limit(4);
 
 	const structuredArticles = articles.map(article => ({
@@ -22,7 +22,7 @@ export const getArticles = async (req, res) => {
 };
 
 // GET /a/:articleId
-export const getArticle = async (req, res) => {
+module.exports.getArticle = async (req, res) => {
 	const { articleId } = req.params;
 
 	if (!mongoose.Types.ObjectId.isValid(articleId))
@@ -36,7 +36,7 @@ export const getArticle = async (req, res) => {
 };
 
 // POST /a
-export const createArticle = async (req, res) => {
+module.exports.createArticle = async (req, res) => {
 	const { author, title, subtitle, bannerImage, body } = req.body;
 	const cleanTitle = sanitizeHTML(title);
 	const cleanSubtitle = sanitizeHTML(subtitle);

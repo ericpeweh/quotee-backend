@@ -1,5 +1,5 @@
 // Dependencies
-import badWords from "bad-words";
+const badWords = require("bad-words");
 
 const profanityFilter = new badWords({ regex: /\*|\.|$/gi });
 const indonesianBadWords = [
@@ -71,7 +71,7 @@ profanityFilter.addWords(...indonesianBadWords);
 profanityFilter.removeWords("pula", "hells", "sadist", "suka");
 
 // Middlewares
-export const quotesValidator = (req, res, next) => {
+module.exports.quotesValidator = (req, res, next) => {
 	const quotes = req.body.quotes;
 
 	// Length validator
@@ -92,7 +92,7 @@ export const quotesValidator = (req, res, next) => {
 	return next();
 };
 
-export const tagsValidator = (req, res, next) => {
+module.exports.tagsValidator = (req, res, next) => {
 	const tags = req.body.tags;
 
 	// Tags length validator
@@ -109,5 +109,3 @@ export const tagsValidator = (req, res, next) => {
 
 	return next();
 };
-
-export default tagsValidator;

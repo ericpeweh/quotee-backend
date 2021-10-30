@@ -1,7 +1,7 @@
 // Dependencies
-import sanitizeHtml from "sanitize-html";
+const sanitizeHtml = require("sanitize-html");
 
-export const sanitizeHTML = data => {
+module.exports.sanitizeHTML = data => {
 	const clean = sanitizeHtml(data, {
 		allowedTags: [],
 		allowedAttributes: {},

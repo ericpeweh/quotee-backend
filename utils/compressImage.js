@@ -1,6 +1,6 @@
 // Dependencies
-import sharp from "sharp";
-import fs from "fs";
+const sharp = require("sharp");
+const fs = require("fs");
 
 const compressImage = async (image, username) => {
 	// Compress image
@@ -12,4 +12,4 @@ const compressImage = async (image, username) => {
 		.catch(error => console.log(error.message));
 };
 
-export default compressImage;
+module.exports = compressImage;

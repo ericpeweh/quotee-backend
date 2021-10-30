@@ -1,11 +1,13 @@
 // Dependencies
-import express from "express";
+const express = require("express");
 
 // Contollers
-import { subscribeNotifications, unsubscribeNotifications } from "../controllers/notifications.js";
+const subscribeNotifications = require("../controllers/notifications.js").subscribeNotifications;
+const unsubscribeNotifications =
+	require("../controllers/notifications.js").unsubscribeNotifications;
 
 // Middlewares
-import { isAuth } from "../middlewares/auth.js";
+const isAuth = require("../middlewares/auth.js").isAuth;
 
 // Express router
 const router = express.Router();
@@ -14,4 +16,4 @@ const router = express.Router();
 router.post("/subscribe", isAuth, subscribeNotifications);
 router.post("/unsubscribe", isAuth, unsubscribeNotifications);
 
-export default router;
+module.exports = router;

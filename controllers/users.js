@@ -1,30 +1,34 @@
 // Dependencies
-import nodemailer from "nodemailer";
-import bcrypt from "bcrypt";
-import fs from "fs";
-import handlebars from "handlebars";
-import moment from "moment";
-import jwt from "jsonwebtoken";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-import mongoose from "mongoose";
+const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
+const fs = require("fs");
+const handlebars = require("handlebars");
+const moment = require("moment");
+const jwt = require("jsonwebtoken");
+const path = require("path");
+const dirname = require("path").dirname;
+const fileURLToPath = require("url").fileURLToPath;
+const mongoose = require("mongoose");
+const validatePassword = require("../utils/validatePassword.js");
 
 // Utils
-import { avatarsURL } from "../utils/avatars.js";
-import cloudinary from "../utils/cloudinary.js";
-import compressImage from "../utils/compressImage.js";
+const avatarsURL = require("../utils/avatars.js").avatarsURL;
+const cloudinary = require("../utils/cloudinary.js");
+const compressImage = require("../utils/compressImage.js");
+const sanitizeHTML = require("../utils/sanitizeHTML.js").sanitizeHTML;
 
-// Use dirname in Node Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// // Use dirname in Node Modules
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
 
 // Models
-import User from "../models/user.js";
-import VerifyEmail from "../models/verifyEmail.js";
-import ResetPassword from "../models/resetPassword.js";
+const User = require("../models/user.js");
+const VerifyEmail = require("../models/verifyEmail.js");
+const ResetPassword = require("../models/resetPassword.js");
+const ReportUser = require("../models/reportUser.js");
 
 // POST /u/signin
-export const signIn = async (req, res) => {
+module.exports.signIn = async (req, res) => {
 	const { usernameOrEmail, password } = req.body;
 	const emailValidator =
 		/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -70,10 +74,16 @@ export const signIn = async (req, res) => {
 };
 
 // POST /u/signup
-export const signUp = async (req, res) => {
+module.exports.signUp = async (req, res) => {
 	const { firstName, lastName, username, email, password, passwordConfirm } = req.body;
 
 	try {
+		// Check email is valid
+		const emailValidator =
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		const isEmail = emailValidator.test(email);
+		if (!isEmail) return res.status(400).json({ message: "Email is not valid!" });
+
 		// Check if email is taken
 		const emailExistingUser = await User.findOne({ email });
 		if (emailExistingUser && emailExistingUser.isEmailVerified === true) {
@@ -114,13 +124,11 @@ export const signUp = async (req, res) => {
 		}
 
 		// Check password format
-		const validatePassword =
-			/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&;^()])[A-Za-z\d@$!%*#?&;^()]{8,}$/;
-		const passwordIsValid = validatePassword.test(password);
+		const passwordIsValid = validatePassword.validate(password);
 		if (!passwordIsValid) {
 			return res.status(400).json({
 				message:
-					"Password should be minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character."
+					"Password should be minimum eight characters, at least one uppercase letter, one lowercase letter and a number."
 			});
 		}
 
@@ -184,13 +192,13 @@ export const signUp = async (req, res) => {
 
 		// Add new user notification
 		const newNotification = {
-			announcer: "Quotee.id",
-			name: "Welcome to quotee.id",
+			announcer: "Quotee",
+			name: "Welcome to Quotee",
 			description:
 				"Your account has been activated, now you can start sharing quotes. You could also update your profile.",
 			profilePicture:
 				"https://res.cloudinary.com/quoteequotesid/image/upload/v1633262782/system/quoteelogo.png",
-			url: `https://quoteeid.netlify.app/settings/account`
+			url: `https://www.quoteequotes.xyz/settings/account`
 		};
 
 		await User.findByIdAndUpdate(newUser._id, {
@@ -201,12 +209,13 @@ export const signUp = async (req, res) => {
 			message: `Account successfully registered, please click on the link that has been just sent to your email to activate your account.`
 		});
 	} catch (error) {
+		console.log(error);
 		return res.status(400).json({ messsage: error.message });
 	}
 };
 
 // POST /u/signOut
-export const signOut = async (req, res) => {
+module.exports.signOut = async (req, res) => {
 	try {
 		res.cookie("jwt", "", {
 			maxAge: 0 // Expires immediately
@@ -219,7 +228,7 @@ export const signOut = async (req, res) => {
 };
 
 // POST /u/auth
-export const auth = async (req, res) => {
+module.exports.auth = async (req, res) => {
 	try {
 		const cookie = req.cookies?.jwt;
 		const authenticated = jwt.verify(cookie, process.env.JWT_SECRET, (error, decoded) => {
@@ -231,6 +240,11 @@ export const auth = async (req, res) => {
 
 		const user = await User.findById(authenticated.userId);
 
+		const unreadNotifications = user.notifications.reduce(
+			(total, notification) => (!notification.read ? (total += 1) : total),
+			0
+		);
+
 		return res.status(200).json({
 			username: user.username,
 			fullName: user.fullName,
@@ -240,7 +254,8 @@ export const auth = async (req, res) => {
 			archivedPosts: user.archivedPosts,
 			followers: user.followers,
 			following: user.following,
-			allowNotifications: user.allowNotifications
+			allowNotifications: user.allowNotifications,
+			unreadNotifications
 		});
 	} catch (error) {
 		return res.status(401).json({ message: error.message });
@@ -248,7 +263,7 @@ export const auth = async (req, res) => {
 };
 
 // POST /u/verifyEmail
-export const verifyEmail = async (req, res) => {
+module.exports.verifyEmail = async (req, res) => {
 	const { token } = req.body;
 
 	try {
@@ -327,7 +342,7 @@ export const verifyEmail = async (req, res) => {
 };
 
 // POST /u/changePassword
-export const changePassword = async (req, res) => {
+module.exports.changePassword = async (req, res) => {
 	try {
 		const username = req.username;
 		const { currentPassword, newPassword, newPasswordConfirm } = req.body;
@@ -344,13 +359,11 @@ export const changePassword = async (req, res) => {
 		}
 
 		// Check password format
-		const validatePassword =
-			/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&;^()])[A-Za-z\d@$!%*#?&;^()]{8,}$/;
-		const passwordIsValid = validatePassword.test(newPassword);
+		const passwordIsValid = validatePassword.validate(newPassword);
 		if (!passwordIsValid) {
 			throw {
 				message:
-					"Your new password should be minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character.",
+					"Your new password should be minimum eight characters, at least one uppercase letter, one lowercase letter, and a number.",
 				status: 400
 			};
 		}
@@ -365,7 +378,7 @@ export const changePassword = async (req, res) => {
 };
 
 // POST /u/resetPassword
-export const resetPassword = async (req, res) => {
+module.exports.resetPassword = async (req, res) => {
 	const { usernameOrEmail } = req.body;
 	const emailValidator =
 		/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -416,7 +429,7 @@ export const resetPassword = async (req, res) => {
 		const emailTemplate = handlebars.compile(emailTemplateSrc);
 		const htmlToSend = emailTemplate({
 			fullName: registeredUser.fullName,
-			resetPasswordURL: `https://quoteeid.netlify.app/verifyResetPassword/${token}`
+			resetPasswordURL: `https://www.quoteequotes.xyz/verifyResetPassword/${token}`
 		});
 
 		const mailOptions = {
@@ -440,7 +453,7 @@ export const resetPassword = async (req, res) => {
 };
 
 // POST /u/verifyResetPassword
-export const verifyResetPassword = async (req, res) => {
+module.exports.verifyResetPassword = async (req, res) => {
 	const { token, password, passwordConfirm } = req.body;
 
 	try {
@@ -458,13 +471,11 @@ export const verifyResetPassword = async (req, res) => {
 		}
 
 		// Check password format
-		const validatePassword =
-			/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&;^()])[A-Za-z\d@$!%*#?&;^()]{8,}$/;
-		const passwordIsValid = validatePassword.test(password);
+		const passwordIsValid = validatePassword.validate(password);
 		if (!passwordIsValid) {
 			return res.status(400).json({
 				message:
-					"Password should be minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character."
+					"Password should be minimum eight characters, at least one uppercase letter, one lowercase letter and a number."
 			});
 		}
 
@@ -496,7 +507,7 @@ export const verifyResetPassword = async (req, res) => {
 };
 
 // GET /u/usersuggestion
-export const userSuggestion = async (req, res) => {
+module.exports.userSuggestion = async (req, res) => {
 	try {
 		const users = await User.aggregate([
 			{ $match: { isEmailVerified: true, username: { $ne: req.username } } },
@@ -532,7 +543,7 @@ export const userSuggestion = async (req, res) => {
 };
 
 // GET /u/:username
-export const userProfile = async (req, res) => {
+module.exports.userProfile = async (req, res) => {
 	const username = req.params.username;
 
 	try {
@@ -560,7 +571,7 @@ export const userProfile = async (req, res) => {
 };
 
 // GET /u/:username/p
-export const userPosts = async (req, res) => {
+module.exports.userPosts = async (req, res) => {
 	const username = req.params.username;
 	const { quotes = "", current = 0 } = req.query;
 	const LIMIT = 10;
@@ -568,7 +579,7 @@ export const userPosts = async (req, res) => {
 	try {
 		const checkUser = await User.findOne({ username });
 		const total = checkUser.posts.length;
-		const hasMore = total > current + 10;
+		const hasMore = total > Number(current) + LIMIT;
 
 		if (!checkUser) {
 			throw "User not found!";
@@ -577,20 +588,20 @@ export const userPosts = async (req, res) => {
 		// Build query up
 		const quotesRegex = new RegExp(quotes || "(.*?)", "i");
 
-		const user = await User.findOne({ username })
-			.skip(Number(current))
-			.limit(LIMIT)
-			.populate({
-				path: "posts",
-				populate: {
-					path: "authorId",
-					select: "profilePicture"
-				},
-				match: {
-					quotes: quotesRegex
-				},
-				options: { sort: { _id: -1 } }
-			});
+		const user = await User.findOne(
+			{ username },
+			{ posts: { $slice: [Number(current), LIMIT] } }
+		).populate({
+			path: "posts",
+			populate: {
+				path: "authorId",
+				select: "profilePicture"
+			},
+			match: {
+				quotes: quotesRegex
+			},
+			options: { sort: { _id: -1 } }
+		});
 
 		if (!user) {
 			throw "User not found!";
@@ -613,7 +624,7 @@ export const userPosts = async (req, res) => {
 };
 
 // GET /u/:username/p
-export const userFavorites = async (req, res) => {
+module.exports.userFavorites = async (req, res) => {
 	const { username: authUsername } = req;
 	const username = req.params.username;
 
@@ -651,7 +662,7 @@ export const userFavorites = async (req, res) => {
 };
 
 // GET /u/:username/p
-export const userArchived = async (req, res) => {
+module.exports.userArchived = async (req, res) => {
 	const { username: authUsername } = req;
 	const username = req.params.username;
 
@@ -691,7 +702,7 @@ export const userArchived = async (req, res) => {
 	}
 };
 
-export const userSettings = async (req, res) => {
+module.exports.userSettings = async (req, res) => {
 	const { username: authUsername } = req;
 	const username = req.params.username;
 
@@ -719,7 +730,7 @@ export const userSettings = async (req, res) => {
 	}
 };
 
-export const updateProfile = async (req, res) => {
+module.exports.updateProfile = async (req, res) => {
 	try {
 		const authUsername = req.username;
 		const { fullName, phoneNumber, description, username } = req.body;
@@ -750,7 +761,7 @@ export const updateProfile = async (req, res) => {
 	}
 };
 
-export const changeProfilePicture = async (req, res) => {
+module.exports.changeProfilePicture = async (req, res) => {
 	try {
 		const username = req.username;
 		const newProfilePicture = req.file.path;
@@ -782,7 +793,7 @@ export const changeProfilePicture = async (req, res) => {
 	}
 };
 
-export const deleteProfilePicture = async (req, res) => {
+module.exports.deleteProfilePicture = async (req, res) => {
 	try {
 		const username = req.username;
 
@@ -804,7 +815,7 @@ export const deleteProfilePicture = async (req, res) => {
 };
 
 // PATCH /u/:userId/follow
-export const followUser = async (req, res) => {
+module.exports.followUser = async (req, res) => {
 	const { username, userId } = req;
 	const { targetId } = req.params;
 
@@ -851,7 +862,7 @@ export const followUser = async (req, res) => {
 		.json({ following: updatedUser.following, followers: updatedTargetUser.followers });
 };
 
-export const userFollowing = async (req, res) => {
+module.exports.userFollowing = async (req, res) => {
 	const { username } = req.params;
 	const { username: usernameQuery = "", current = 0 } = req.query;
 	const LIMIT = 20;
@@ -886,7 +897,7 @@ export const userFollowing = async (req, res) => {
 	return res.json({ following: structuredFollowingData, hasMore });
 };
 
-export const userFollowers = async (req, res) => {
+module.exports.userFollowers = async (req, res) => {
 	const { username } = req.params;
 	const { username: usernameQuery = "", current = 0 } = req.query;
 	const LIMIT = 20;
@@ -921,7 +932,7 @@ export const userFollowers = async (req, res) => {
 	return res.json({ followers: structuredFollowersData, hasMore });
 };
 
-export const topUser = async (req, res) => {
+module.exports.topUser = async (req, res) => {
 	const username = req.username;
 	const users = await User.find({ isEmailVerified: true, username: { $ne: username } })
 		.sort({ followers: -1 })
@@ -937,7 +948,7 @@ export const topUser = async (req, res) => {
 	return res.status(200).json(topUser);
 };
 
-export const userNotifications = async (req, res) => {
+module.exports.userNotifications = async (req, res) => {
 	const { current = 0 } = req.query;
 	const LIMIT = 10;
 	const username = req.username;
@@ -951,8 +962,58 @@ export const userNotifications = async (req, res) => {
 		{ notifications: { $slice: [Number(current), LIMIT] } }
 	);
 
+	const updatedNotifications = await User.findOneAndUpdate(
+		{ username },
+		{ $set: { "notifications.$[].read": true } },
+		{ new: true }
+	);
+
 	const selectedUser = await User.findOne({ username });
 	const hasMore = selectedUser.notifications.length > current + LIMIT;
 
-	return res.status(200).json({ notifications: user.notifications, hasMore });
+	return res.status(200).json({ notifications: user.notifications.reverse(), hasMore });
+};
+
+module.exports.reportUser = async (req, res) => {
+	const { userId, username } = req;
+	const { username: reportedUsername } = req.params;
+	const { description, code } = req.body;
+
+	const cleanedCode = sanitizeHTML(code);
+	const cleanedDescription = sanitizeHTML(description);
+	const cleanedUsername = sanitizeHTML(reportedUsername);
+
+	const reportReasons = [
+		{ text: "Konten tidak pantas", code: "001" },
+		{ text: "Melakukan spam", code: "002" },
+		{ text: "Akun palsu", code: "003" },
+		{ text: "Alasan lainnya", code: "004" }
+	];
+
+	const isFound = reportReasons.filter(reason => reason.code === cleanedCode);
+	if (isFound.length === 0) {
+		return res.status(404).json({ message: "Report code not found!" });
+	}
+
+	const selectedUser = await User.find({ username: cleanedUsername });
+
+	if (!selectedUser) {
+		return res.status(404).json({ messaeg: "User not found!" });
+	}
+
+	if (selectedUser._id === userId) {
+		return res.status(401).json({ message: "You're not allowed to do that!" });
+	}
+
+	const newReport = new ReportUser({
+		issuedBy: userId,
+		userId: selectedUser._id,
+		reasonCode: isFound[0].code,
+		reasonText: isFound[0].text,
+		description: cleanedDescription
+	});
+
+	await newReport.save();
+
+	return res.status(200).json({ message: "Thank you for your report." });
 };

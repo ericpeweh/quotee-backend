@@ -1,11 +1,13 @@
 // Dependencies
-import express from "express";
+const express = require("express");
 
 // Contollers
-import { getArticles, getArticle, createArticle } from "../controllers/articles.js";
+const getArticles = require("../controllers/articles.js").getArticles;
+const getArticle = require("../controllers/articles.js").getArticle;
+const createArticle = require("../controllers/articles.js").createArticle;
 
 // Middlewares
-import { isAuth } from "../middlewares/auth.js";
+const isAuth = require("../middlewares/auth.js").isAuth;
 
 // Express router
 const router = express.Router();
@@ -15,4 +17,4 @@ router.get("/", isAuth, getArticles);
 router.get("/:articleId", getArticle);
 // router.post("/", createArticle);
 
-export default router;
+module.exports = router;
