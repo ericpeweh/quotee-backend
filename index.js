@@ -29,8 +29,8 @@ app.use(
 		origin: [
 			"https://www.quoteequotes.xyz",
 			"https://www.quoteequotes.xyz/",
-			// "http://localhost:3000",
 			"https://103.247.9.250"
+			// "http://localhost:3000"
 		]
 	})
 );

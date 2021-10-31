@@ -149,10 +149,9 @@ module.exports.signUp = async (req, res) => {
 		});
 
 		// Generate unique token for email verification
-		const token = jwt.sign({ email }, process.env.JWT_SECRET);
-		// const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-		// 	expiresIn: "24h"
-		// });
+		const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+			expiresIn: "7d"
+		});
 
 		// Store token in database
 		await VerifyEmail.create({
@@ -300,10 +299,9 @@ module.exports.verifyEmail = async (req, res) => {
 		// Resend Token if user is registered
 		if (!userVerification && registeredUser && !registeredUser.isEmailVerified) {
 			// Generate unique token for email verification
-			const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET);
-			// const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
-			// 	expiresIn: "24h"
-			// });
+			const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
+				expiresIn: "7d"
+			});
 
 			// Store token in database
 			await VerifyEmail.create({
@@ -405,24 +403,16 @@ module.exports.resetPassword = async (req, res) => {
 				.json({ message: `Can't find user with that ${isEmail ? "email" : "username"}!` });
 
 		// Generate unique token for email verification
-		// const token = jwt.sign(
-		// 	{
-		// 		email: registeredUser.email,
-		// 		username: registeredUser.username,
-		// 		userId: registeredUser._id
-		// 	},
-		// 	process.env.JWT_SECRET,
-		// 	{
-		// 		expiresIn: "1h"
-		// 	}
-		// );
 		const token = jwt.sign(
 			{
 				email: registeredUser.email,
 				username: registeredUser.username,
 				userId: registeredUser._id
 			},
-			process.env.JWT_SECRET
+			process.env.JWT_SECRET,
+			{
+				expiresIn: "1h"
+			}
 		);
 
 		// Store token in database
