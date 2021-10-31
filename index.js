@@ -27,7 +27,12 @@ app.set("trust proxy", 1);
 app.use(
 	cors({
 		credentials: true,
-		origin: ["https://quoteequotes.xyz"]
+		origin: [
+			"https://www.quoteequotes.xyz",
+			"https://www.quoteequotes.xyz/",
+			// "http://localhost:3000",
+			"https://103.247.9.250"
+		]
 	})
 );
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
