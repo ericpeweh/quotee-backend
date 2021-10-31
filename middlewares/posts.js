@@ -83,6 +83,11 @@ module.exports.quotesValidator = (req, res, next) => {
 
 	// Profanity validator
 	const currentQuotes = quotes;
+	const alphanumericRegex = /^[a-zA-Z0-9_]*$/;
+	const isAlphanumeric = alphanumericRegex.test(quotes);
+
+	if (!isAlphanumeric && quotes.length >= 20) return next();
+
 	const filteredQuotes = profanityFilter.clean(quotes);
 
 	if (currentQuotes !== filteredQuotes) {
