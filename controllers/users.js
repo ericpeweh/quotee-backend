@@ -6,8 +6,8 @@ const handlebars = require("handlebars");
 const moment = require("moment");
 const jwt = require("jsonwebtoken");
 const path = require("path");
-const dirname = require("path").dirname;
-const fileURLToPath = require("url").fileURLToPath;
+// const dirname = require("path").dirname;
+// const fileURLToPath = require("url").fileURLToPath;
 const mongoose = require("mongoose");
 const validatePassword = require("../utils/validatePassword.js");
 
@@ -60,14 +60,14 @@ module.exports.signIn = async (req, res) => {
 			{ expiresIn: "7d" }
 		);
 
-		res.cookie("jwt", token, {
-			httpOnly: true,
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
-			sameSite: "none",
-			secure: true
-		});
+		// res.cookie("jwt", token, {
+		// 	httpOnly: true,
+		// 	maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
+		// 	sameSite: "none",
+		// 	secure: true
+		// });
 
-		res.status(200).json({ message: "Signed in successfully." });
+		res.status(200).json({ message: "Signed in successfully.", token });
 	} catch (error) {
 		return res.status(400).json({ message: error?.message });
 	}
@@ -217,9 +217,9 @@ module.exports.signUp = async (req, res) => {
 // POST /u/signOut
 module.exports.signOut = async (req, res) => {
 	try {
-		res.cookie("jwt", "", {
-			maxAge: 0 // Expires immediately
-		});
+		// res.cookie("jwt", "", {
+		// 	maxAge: 0 // Expires immediately
+		// });
 
 		res.status(200).json({ message: "Signed out successfully!" });
 	} catch (error) {
@@ -230,9 +230,17 @@ module.exports.signOut = async (req, res) => {
 // POST /u/auth
 module.exports.auth = async (req, res) => {
 	try {
-		const cookie = req.cookies?.jwt;
-		const authenticated = jwt.verify(cookie, process.env.JWT_SECRET, (error, decoded) => {
+		// const cookie = req.cookies?.jwt;
+		if (!req.headers.authorization) {
+			throw { message: "You're not authorized." };
+		}
+		const token = req.headers.authorization?.split(" ")[1];
+
+		const authenticated = jwt.verify(token, process.env.JWT_SECRET, (error, decoded) => {
 			if (error) {
+				if (error.message === "jwt expired") {
+					throw { message: "Expired" };
+				}
 				throw { message: "Unauthenticated!" };
 			}
 			return decoded;

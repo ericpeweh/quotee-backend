@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 const mongoSanitize = require("express-mongo-sanitize");
 const helmet = require("helmet");
 
@@ -20,19 +20,20 @@ const qotdTask = require("./schedule/qotd.js");
 // App Config
 const app = express();
 dotenv.config();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 
 // Body parser & cors-policy & cookie parser
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(express.json({ limit: "30mb", extended: "true" }));
+app.set("trust proxy", 1);
 app.use(
 	cors({
 		credentials: true,
-		origin: ["https://www.quoteequotes.xyz/"]
+		origin: ["http://localhost:3000"]
 	})
 );
-app.set("trust proxy", 1);
-app.use(cookieParser());
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "30mb", extended: "true" }));
+
+// app.use(cookieParser());
 app.use(helmet());
 app.use(
 	mongoSanitize({
@@ -61,9 +62,7 @@ qotdTask.start();
 mongoose
 	.connect(process.env.DB_URL, {
 		useNewUrlParser: true,
-		useCreateIndex: true,
-		useUnifiedTopology: true,
-		useFindAndModify: false
+		useUnifiedTopology: true
 	})
 	.then(() => app.listen(PORT, () => console.log(`Server running on port: ${PORT}`)))
 	.catch(error => console.log(error));

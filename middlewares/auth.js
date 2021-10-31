@@ -5,11 +5,17 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user.js");
 
 module.exports.isAuth = async (req, res, next) => {
-	const token = req.cookies?.jwt;
+	if (!req.headers.authorization) {
+		throw { message: "You're not authorized." };
+	}
+	const token = req.headers.authorization?.split(" ")[1];
 
 	try {
 		const authenticated = jwt.verify(token, process.env.JWT_SECRET, (error, decoded) => {
 			if (error) {
+				if (error.message === "jwt expired") {
+					throw { message: "Expired" };
+				}
 				throw { message: "You're not authorized." };
 			}
 
