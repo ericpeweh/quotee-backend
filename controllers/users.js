@@ -175,7 +175,7 @@ module.exports.signUp = async (req, res) => {
 		const emailTemplate = handlebars.compile(emailTemplateSrc);
 		const htmlToSend = emailTemplate({
 			fullName: `${firstName} ${lastName}`,
-			verificationURL: `https://quoteeid.netlify.app/verifyEmail/${token}`
+			verificationURL: `https://quoteequotes.xyz/verifyEmail/${token}`
 		});
 
 		const mailOptions = {
@@ -325,7 +325,7 @@ module.exports.verifyEmail = async (req, res) => {
 			const emailTemplate = handlebars.compile(emailTemplateSrc);
 			const htmlToSend = emailTemplate({
 				fullName: `${registeredUser.fullName}`,
-				verificationURL: `https://quoteeid.netlify.app/verifyEmail/${token}`
+				verificationURL: `https://quoteequotes.xyz/verifyEmail/${token}`
 			});
 
 			const mailOptions = {
