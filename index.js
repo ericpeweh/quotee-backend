@@ -25,13 +25,13 @@ const PORT = process.env.PORT || 5000;
 // Body parser & cors-policy & cookie parser
 app.use(
 	cors({
-		credentials: true,
-		origin: [
-			"https://www.quoteequotes.xyz",
-			"https://www.quoteequotes.xyz/",
-			"https://103.247.9.250"
-			// "http://localhost:3000"
-		]
+		credentials: true
+		// origin: [
+		// 	"https://www.quoteequotes.xyz",
+		// 	"https://www.quoteequotes.xyz/",
+		// 	"https://103.247.9.250",
+		// 	"http://localhost:3000"
+		// ]
 	})
 );
 app.set("trust proxy", 1);
