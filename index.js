@@ -23,7 +23,6 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 
 // Body parser & cors-policy & cookie parser
-app.set("trust proxy", 1);
 app.use(
 	cors({
 		credentials: true,
@@ -35,6 +34,7 @@ app.use(
 		]
 	})
 );
+app.set("trust proxy", 1);
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(express.json({ limit: "30mb", extended: "true" }));
 
