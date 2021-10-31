@@ -485,7 +485,10 @@ module.exports.unarchivePost = async (req, res) => {
 		profilePicture: updatedUser.profilePicture
 	}));
 
-	return res.status(200).json(structuredArchived);
+	return res.status(200).json({
+		archived: structuredArchived,
+		unarchivedPost: { ...unarchivedPost.toObject(), profilePicture: user.profilePicture }
+	});
 };
 
 // DELETE /p/:postId
