@@ -528,7 +528,6 @@ module.exports.userSuggestion = async (req, res) => {
 					document: { $push: "$$ROOT" }
 				}
 			},
-
 			{
 				$limit: 6
 			},
@@ -596,10 +595,7 @@ module.exports.userPosts = async (req, res) => {
 		// Build query up
 		const quotesRegex = new RegExp(quotes || "(.*?)", "i");
 
-		const user = await User.findOne(
-			{ username },
-			{ posts: { $slice: [Number(current), LIMIT] } }
-		).populate({
+		const user = await User.findOne({ username }).populate({
 			path: "posts",
 			populate: {
 				path: "authorId",
@@ -615,15 +611,17 @@ module.exports.userPosts = async (req, res) => {
 			throw "User not found!";
 		}
 
-		const structuredPosts = user.posts.map(post => ({
-			_id: post._id,
-			quotes: post.quotes,
-			author: post.author,
-			tags: post.tags,
-			likes: post.likes,
-			createdAt: post.createdAt,
-			profilePicture: post.authorId.profilePicture
-		}));
+		const structuredPosts = user.posts
+			.slice(Number(current), Number(current) + LIMIT)
+			.map(post => ({
+				_id: post._id,
+				quotes: post.quotes,
+				author: post.author,
+				tags: post.tags,
+				likes: post.likes,
+				createdAt: post.createdAt,
+				profilePicture: post.authorId.profilePicture
+			}));
 
 		return res.status(200).json({ posts: structuredPosts, hasMore });
 	} catch (error) {
