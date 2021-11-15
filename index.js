@@ -63,8 +63,10 @@ app.get("/", (req, res) => {
 	res.send("Quotee API");
 });
 
-// Schedule
-qotdTask.start();
+if (process.env.NODE_ENV === "production") {
+	// Schedule
+	qotdTask.start();
+}
 
 // Connect to MongoDB
 mongoose

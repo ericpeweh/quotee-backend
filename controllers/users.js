@@ -963,10 +963,38 @@ module.exports.userNotifications = async (req, res) => {
 		return res.status(401).json({ message: "Not authorized" });
 	}
 
-	const user = await User.findOne(
-		{ username },
-		{ notifications: { $slice: [Number(current), LIMIT] } }
-	);
+	const user = await User.aggregate([
+		{
+			$match: {
+				username
+			}
+		},
+		{
+			$unwind: {
+				path: "$notifications"
+			}
+		},
+		{
+			$sort: {
+				notifications: -1
+			}
+		},
+		{
+			$group: {
+				_id: "$_id",
+				notifications: {
+					$push: "$notifications"
+				}
+			}
+		},
+		{
+			$project: {
+				notifications: {
+					$slice: ["$notifications", Number(current), LIMIT]
+				}
+			}
+		}
+	]);
 
 	const updatedNotifications = await User.findOneAndUpdate(
 		{ username },
@@ -977,7 +1005,7 @@ module.exports.userNotifications = async (req, res) => {
 	const selectedUser = await User.findOne({ username });
 	const hasMore = selectedUser.notifications.length > current + LIMIT;
 
-	return res.status(200).json({ notifications: user.notifications.reverse(), hasMore });
+	return res.status(200).json({ notifications: user[0].notifications, hasMore });
 };
 
 module.exports.reportUser = async (req, res) => {
