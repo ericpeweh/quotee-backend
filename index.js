@@ -27,11 +27,10 @@ app.use(
 	cors({
 		credentials: true,
 		origin: [
-			"https://www.quoteequotes.xyz",
-			"https://quoteequotes.xyz",
-			"www.quoteequotes.xyz",
-			"quoteequotes.xyz",
-			"https://103.247.9.250"
+			"https://www.quotee.cyclic.app",
+			"https://quotee.cyclic.app",
+			"www.quotee.cyclic.app",
+			"quotee.cyclic.app"
 			// "http://localhost:3000"
 		]
 	})
