@@ -784,12 +784,12 @@ module.exports.changeProfilePicture = async (req, res) => {
 			}
 		}
 
-		const uploadedImage = await cloudinary.uploader.upload(`tmp/${username}.webp`, {
+		const uploadedImage = await cloudinary.uploader.upload(`/tmp/${username}.webp`, {
 			folder: "profilePicture",
 			use_filename: true
 		});
 
-		fs.unlinkSync(`tmp/${username}.webp`);
+		fs.unlinkSync(`/tmp/${username}.webp`);
 
 		await User.findOneAndUpdate({ username }, { profilePicture: uploadedImage.secure_url });
 

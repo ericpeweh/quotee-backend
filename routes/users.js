@@ -6,7 +6,7 @@ const multer = require("multer");
 const isAuth = require("../middlewares/auth.js").isAuth;
 
 // Multer
-const upload = multer({ dest: "tmp/" });
+const upload = multer({ dest: "/tmp" });
 
 // Controllers
 const signUp = require("../controllers/users.js").signUp;

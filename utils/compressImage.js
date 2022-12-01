@@ -7,7 +7,7 @@ const compressImage = async (image, username) => {
 	await sharp(image)
 		.resize(400)
 		.webp({ quality: 100 })
-		.toFile(`tmp/${username}.webp`)
+		.toFile(`/tmp/${username}.webp`)
 		.then(data => fs.unlinkSync(image)) // Delete old not compressed image
 		.catch(error => console.log(error.message));
 };
