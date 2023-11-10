@@ -175,7 +175,7 @@ module.exports.signUp = async (req, res) => {
 		const emailTemplate = handlebars.compile(emailTemplateSrc);
 		const htmlToSend = emailTemplate({
 			fullName: `${firstName} ${lastName}`,
-			verificationURL: `https://quoteequotes.xyz/verifyEmail/${token}`
+			verificationURL: `https://quotee.cyclic.app/verifyEmail/${token}`
 		});
 
 		const mailOptions = {
@@ -198,7 +198,7 @@ module.exports.signUp = async (req, res) => {
 				"Your account has been activated, now you can start sharing quotes. You could also update your profile.",
 			profilePicture:
 				"https://res.cloudinary.com/quoteequotesid/image/upload/v1633262782/system/quoteelogo.png",
-			url: `https://www.quoteequotes.xyz/settings/account`
+			url: `https://quotee.cyclic.app/settings/account`
 		};
 
 		await User.findByIdAndUpdate(newUser._id, {
@@ -325,7 +325,7 @@ module.exports.verifyEmail = async (req, res) => {
 			const emailTemplate = handlebars.compile(emailTemplateSrc);
 			const htmlToSend = emailTemplate({
 				fullName: `${registeredUser.fullName}`,
-				verificationURL: `https://quoteequotes.xyz/verifyEmail/${token}`
+				verificationURL: `https://quotee.cyclic.app/verifyEmail/${token}`
 			});
 
 			const mailOptions = {
@@ -437,7 +437,7 @@ module.exports.resetPassword = async (req, res) => {
 		const emailTemplate = handlebars.compile(emailTemplateSrc);
 		const htmlToSend = emailTemplate({
 			fullName: registeredUser.fullName,
-			resetPasswordURL: `https://www.quoteequotes.xyz/verifyResetPassword/${token}`
+			resetPasswordURL: `https://quotee.cyclic.app/verifyResetPassword/${token}`
 		});
 
 		const mailOptions = {

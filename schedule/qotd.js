@@ -32,7 +32,7 @@ const sendQOTD = async () => {
 		const payload = JSON.stringify({
 			body: `${quotes.quotes} - ${quotes.author}`,
 			title: "Quotes of the day",
-			url: `https://www.quoteequotes.xyz/${quotes.author}/p/${quotes._id}`
+			url: `https://quotee.cyclic.app/${quotes.author}/p/${quotes._id}`
 		});
 
 		const newNotification = {
@@ -40,7 +40,7 @@ const sendQOTD = async () => {
 			name: "Quotes of the day",
 			description: `${quotes.quotes} - ${quotes.author}`,
 			profilePicture: quotes.authorId.profilePicture,
-			url: `https://www.quoteequotes.xyz/${quotes.author}/p/${quotes._id}`
+			url: `https://quotee.cyclic.app/${quotes.author}/p/${quotes._id}`
 		};
 
 		notifications.map((user, index) => {
